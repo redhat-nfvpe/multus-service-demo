@@ -2,7 +2,7 @@ name: Image push for master
 on: 
   push:
     branches:
-      - master
+      - main
 jobs:
   push-amd64:
     name: Image push/amd64
