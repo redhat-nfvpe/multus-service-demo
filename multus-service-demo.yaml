@@ -1,0 +1,100 @@
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan1
+spec: 
+  config: '{
+            "cniVersion": "0.3.1",
+            "type": "macvlan",
+            "master": "ens4",
+            "mode": "bridge",
+            "ipam": {
+                "type": "whereabouts",
+                "range":     "10.2.128.0/24",
+                "exclude": [
+                  "10.2.128.10/32",
+                  "10.2.128.11/32",
+                  "10.2.128.12/32",
+                  "10.2.128.254/32"
+                ]
+            }
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fedora-net1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[ { "name": "macvlan1" } ]'
+spec:
+  containers:
+  - name: fedora-net1
+    image: s1061123/fedora-tools:latest
+    imagePullPolicy: Always
+    command:
+    - /sbin/init
+    securityContext:
+      privileged: true
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: multus-nginx-macvlan
+  labels:
+    service.kubernetes.io/service-proxy-name: multus-proxy
+  annotations:
+    k8s.v1.cni.cncf.io/service-network: macvlan1
+spec:
+  selector:
+    app: multus-nginx-macvlan
+  ports:
+  - protocol: TCP
+    port: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multus-nginx-macvlan-conf
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <body>
+    This is multus-nginx-macvlan!
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multus-nginx-macvlan
+spec:
+  selector:
+    matchLabels:
+      app: multus-nginx-macvlan
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: multus-nginx-macvlan
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[
+            { "name": "macvlan1" } ]'
+    spec:
+      containers:
+      - name: multus-nginx
+        #image: nginx
+        image: s1061123/fedora-nginx:latest
+        ports:
+        - containerPort: 80
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: multus-nginx-macvlan-conf
+      volumes:
+        - name: multus-nginx-macvlan-conf
+          configMap:
+            name: multus-nginx-macvlan-conf
