@@ -30,7 +30,7 @@ metadata:
 spec:
   containers:
   - name: fedora-net1
-    image: s1061123/fedora-tools:latest
+    image: ghcr.io/redhat-nfvpe/multus-service-demo:fedora-tools
     imagePullPolicy: Always
     command:
     - /sbin/init
@@ -84,8 +84,7 @@ spec:
     spec:
       containers:
       - name: multus-nginx
-        #image: nginx
-        image: s1061123/fedora-nginx:latest
+        image: ghcr.io/redhat-nfvpe/multus-service-demo:fedora-nginx
         ports:
         - containerPort: 80
         imagePullPolicy: IfNotPresent
