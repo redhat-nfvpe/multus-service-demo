@@ -1,5 +1,5 @@
-FROM docker.io/fedora:35
+FROM docker.io/fedora:36
 
 LABEL org.opencontainers.image.source https://github.com/redhat-nfvpe/multus-service-demo
 RUN dnf update -y && \
-	dnf install -y iproute iptables-nft iptables iputils net-tools procps-ng ltrace strace tcpdump wireshark-cli bind-utils
+	dnf install -y bind-utils iproute iptables iptables-nft iptables-legacy iputils net-tools ltrace procps-ng strace tcpdump wireshark-cli
